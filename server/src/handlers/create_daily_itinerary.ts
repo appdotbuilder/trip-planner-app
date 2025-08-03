@@ -1,17 +1,25 @@
 
+import { db } from '../db';
+import { dailyItinerariesTable } from '../db/schema';
 import { type CreateDailyItineraryInput, type DailyItinerary } from '../schema';
 
 export const createDailyItinerary = async (input: CreateDailyItineraryInput): Promise<DailyItinerary> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is creating a daily itinerary for a specific day
-    // of a trip and persisting it in the database.
-    return Promise.resolve({
-        id: 0, // Placeholder ID
+  try {
+    // Insert daily itinerary record
+    const result = await db.insert(dailyItinerariesTable)
+      .values({
         trip_id: input.trip_id,
         date: input.date,
         title: input.title,
-        notes: input.notes,
-        created_at: new Date(),
-        updated_at: new Date()
-    } as DailyItinerary);
+        notes: input.notes
+      })
+      .returning()
+      .execute();
+
+    const dailyItinerary = result[0];
+    return dailyItinerary;
+  } catch (error) {
+    console.error('Daily itinerary creation failed:', error);
+    throw error;
+  }
 };

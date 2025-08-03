@@ -1,12 +1,13 @@
 
+import { db } from '../db';
+import { activitiesTable } from '../db/schema';
 import { type CreateActivityInput, type Activity } from '../schema';
 
 export const createActivity = async (input: CreateActivityInput): Promise<Activity> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is creating a new activity within a daily itinerary
-    // and persisting it in the database with proper ordering.
-    return Promise.resolve({
-        id: 0, // Placeholder ID
+  try {
+    // Insert activity record
+    const result = await db.insert(activitiesTable)
+      .values({
         daily_itinerary_id: input.daily_itinerary_id,
         title: input.title,
         description: input.description,
@@ -17,9 +18,20 @@ export const createActivity = async (input: CreateActivityInput): Promise<Activi
         end_time: input.end_time,
         estimated_duration: input.estimated_duration,
         transportation_method: input.transportation_method,
-        cost_estimate: input.cost_estimate,
-        order_index: input.order_index,
-        created_at: new Date(),
-        updated_at: new Date()
-    } as Activity);
+        cost_estimate: input.cost_estimate ? input.cost_estimate.toString() : null, // Convert number to string for numeric column
+        order_index: input.order_index
+      })
+      .returning()
+      .execute();
+
+    // Convert numeric fields back to numbers before returning
+    const activity = result[0];
+    return {
+      ...activity,
+      cost_estimate: activity.cost_estimate ? parseFloat(activity.cost_estimate) : null // Convert string back to number
+    };
+  } catch (error) {
+    console.error('Activity creation failed:', error);
+    throw error;
+  }
 };
